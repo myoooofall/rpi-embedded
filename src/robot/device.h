@@ -10,6 +10,7 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
+#include <fstream>
 
 #include "zos/utils/threadpool.h"
 #include "zos/utils/rate.h"

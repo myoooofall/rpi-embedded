@@ -43,6 +43,8 @@ public:
     uint8_t buffer[IMU_DATA_LENGTH] = {0};
 
     std::vector<int> read_nano_uart();
+    int imu_failures=0;
+    bool reset=false ;
     struct imu_data {
         float acc_x;
         float acc_y;

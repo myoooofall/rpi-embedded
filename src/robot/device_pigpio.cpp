@@ -35,8 +35,9 @@ devicez::devicez(int num, uint8_t *i2c_addr_t) : i2c_th_single(num) {
     uart1->setBaudRate(921600);
     uart1->setFlowcontrol(false, true);
     uart1->setMode(8,mraa::UART_PARITY_NONE , 0);
-    // uart1->setTimeout(10,10,10);
+    uart1->setTimeout(10,10,10);
 
+  
     try {
         uart = new mraa::Uart("/dev/ttyAMA1");
     } catch (std::exception& e) {
@@ -354,7 +355,7 @@ void devicez::write_uart(uint8_t* buff) {
 void devicez::read_uart(uint8_t* buff) {
     // std::scoped_lock lock(mutex_uart);
     std::string buff_str = uart->readStr(UART_BUFF_SIZE);
-    // std::cout << "read pack: " << buff_str << std::endl;
+    zos::status("{:#04x} {:#04x} {:#04x}",buff_str[0],buff_str[1],buff_str[2]);
     if (buff != NULL) {
         std::copy(buff_str.begin(), buff_str.begin()+UART_BUFF_SIZE, buff);
     }
@@ -414,9 +415,12 @@ int devicez::read_imu(mraa::Uart* uart) {
                 imu_status.T_degree = (short)(((short)data[index + 9] << 8) | data[index + 8]) / 32768.0 * 96.38 + 36.53;
                 // ESP_LOGE("imu", "imu acc_x_raw: %d, %d, %d, %d", data[index+0], data[index + 1], data[index + 2], data[index + 3]);
                 // ESP_LOGI("imu", "imu acc: %f, %f, %f, %f", imu_status.acc_x, imu_status.acc_y, imu_status.acc_z, imu_status.T_degree);
+                imu_failures++;
+                
             }
         } else {
             std::cout<<"imu acc not found"<<std::endl;
+            imu_failures++;
         }
     }
     {
@@ -432,9 +436,11 @@ int devicez::read_imu(mraa::Uart* uart) {
                 imu_status.omega_y = (short)(((short)data[index + 5] << 8) | data[index + 4]) / 32768.0 * 2000;
                 imu_status.omega_z = (short)(((short)data[index + 7] << 8) | data[index + 6]) / 32768.0 * 2000;
                 imu_status.voltage = (short)(((short)data[index + 9] << 8) | data[index + 8]) / 100.0;
+                imu_failures++;
             }
         } else {
            std::cout<<"imu acc not found"<<std::endl;
+           imu_failures++;
         }
     }
     {
@@ -450,16 +456,30 @@ int devicez::read_imu(mraa::Uart* uart) {
                 imu_status.theta_y = (short)(((short)data[index + 5] << 8) | data[index + 4]) / 32768.0 * 180;
                 imu_status.theta_z = (short)(((short)data[index + 7] << 8) | data[index + 6]) / 32768.0 * 180;
                 imu_status.version = (short)(((short)data[index + 9] << 8) | data[index + 8]);
+                imu_failures++;
             }
         } else {
             std::cout<<"imu acc not found"<<std::endl;
+            imu_failures++;
         }
     }
     //std::for_each(data.begin(), data.end(), [](uint8_t element) {
   // 处理每个元素
 //   zos::status("=-------------------imudata:{:#04x}\n",element);
 //});
-
+    zos::status("=-------------------imu_failures:{}\n",imu_failures);
+    if(imu_failures>5000){
+        reset=true;
+         zos::warning("uart is crashed !");
+        // std::ofstream flag_file("restart_flag.txt");
+        // if (flag_file.is_open()) {
+        //         zos::warning("uart is crashed ,Created restart flag file!");
+        //         flag_file.close();
+        //     } else {
+        //         zos::warning("uart is crashed ,filed to creat flag file!");
+        //     }
+            imu_failures=0;
+    }
     return length;
 }
 
@@ -493,4 +513,3 @@ bool devicez::sumcrc(uint8_t* data) {
             // ESP_LOGD("imu crc", "sumcrc: %d, real: %d", crc, data[10]);
             return (crc == data[10]);
         }
-
