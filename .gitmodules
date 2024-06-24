@@ -1,0 +1,4 @@
+[submodule "src/share/zos/zos"]
+	path = src/share/zos
+	url = git@github.com:Turing-zero/zos.git
+	branch = dev

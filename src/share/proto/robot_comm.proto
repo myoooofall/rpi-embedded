@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package robot_comm;
+
+message Robot {
+    int32 robot_num = 1;
+    int32 Vx_package = 2;
+    int32 Vy_package = 3;
+    int32 Vr_package = 4;
+    bool Robot_Is_Report = 5;
+    int32 Robot_drib = 6;
+
+    enum ShootType {
+        SHOOT = 0;
+        CHIP = 1;
+    }
+
+    ShootType Robot_Chip_Or_Shoot = 7;
+    int32 Robot_Boot_Power = 8;
+}
