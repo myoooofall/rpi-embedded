@@ -1,4 +1,2 @@
 # rpi-embedded
-the version used in national competition 2024.
-equipped with imu and receive imu data
-however imu is not used actually
+the version truly using imu in angle pid incluing imu calibration
