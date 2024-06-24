@@ -89,5 +89,5 @@ message Robot_Command {
         UDP_WIFI = 3;
     }
     CommType comm_type = 12;
-    float angle = 13;
+    repeated float angle_pid = 13;
 }

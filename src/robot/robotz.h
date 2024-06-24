@@ -76,6 +76,7 @@ public:
         bool use_dir = 0;
         //// use to store
         float vx_target_last = 0, vy_target_last = 0, vr_target_last = 0;
+        
         // cmd_pose, cmd_chase
         // TODO
 
@@ -84,10 +85,7 @@ public:
         uint16_t acc_r_set = 60;
         
         uint8_t DEC_FRAME = 0;
-        std::array<float, 4> pid_kp = {0,0,0,0};
-        std::array<float, 4> pid_ki = {0,0,0,0};
-        std::array<float, 4> pid_kd = {0,0,0,0};
-        bool imu_is_used = 0 ;
+       std::array<float,3> angle_pid={0.1,0.1,0};
 
         // store origin pb cmd
     } robot_cmd;
@@ -125,10 +123,18 @@ public:
     uint8_t Kick_Count = 0;
     int8_t Left_Report_Package = 0;
 
+    // float angle_p = 0.1;
+    // float angle_i = 0.1;
+    // float angle_d = 0;
+    float error = 0;
+    float prev_error = 0;
+    double get_angle(float angle);
+
     // uint8_t RX_Packet[25];
     void set_pid();
     void set_pid_time();
     void set_pid_time1();
+    double get_vr(const double _dt);
 
     void run_per_13ms(std::stop_token);
     bool get_new_pack();
