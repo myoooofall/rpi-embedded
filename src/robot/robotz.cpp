@@ -191,13 +191,7 @@ void robotz::_cmd_cb(const zos::Data& data){
             robot_cmd.drib_power = 0;
             std::fill_n(begin(vel_pack), MAX_MOTOR, 0);
             zos::status("robot stand!");
-            std::ofstream flag_file("restart_flag.txt");
-        if (flag_file.is_open()) {
-                zos::warning("uart is crashed ,Created restart flag file!");
-                flag_file.close();
-            } else {
-                zos::warning("uart is crashed ,failed to creat flag file!");
-            }
+           
 
         }
         else{
@@ -532,8 +526,17 @@ void robotz::motion_planner(const double _dt) { // dt in us
 
     robot_cmd.vx_target_last = vx;
     robot_cmd.vy_target_last = vy;
+
+    double vr= get_vr(_dt);
+    double acc_r = (vr - robot_cmd.vr_target_last)/(_dt/1000000);
+    if(acc_r > robot_cmd.acc_r_set){
+        acc_r = robot_cmd.acc_r_set;
+    }
+    vr = robot_cmd.vr_target_last + acc_r*_dt/1000000.0;
+    robot_cmd.vr_target_last = vr ;
+
     for(int i=0; i < 4; i++) {
-        vel_pack[i] = ((sin_angle[i]) * vx + (cos_angle[i]) * vy - 8.2 * robot_cmd.vr_target/160) * Vel_k2 * 100; // TODO: *100
+        vel_pack[i] = ((sin_angle[i]) * vx + (cos_angle[i]) * vy - 8.2 * vr/160) * Vel_k2 * 100; // TODO: *100
         vel_pack[i] = (vel_pack[i] >  8000) ?  8000 : vel_pack[i];
         vel_pack[i] = (vel_pack[i] < -8000) ? -8000 : vel_pack[i];
     }
@@ -924,35 +927,22 @@ void robotz::set_pid() {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
-void robotz::set_pid_time(){
-
-    auto& _c = robot_cmd;
-    if(_c.imu_is_used){
-        pid_busy = true;
-        gpio_devices.set_motors_pid(pid_pack);
-        pid_real = gpio_devices.get_motors_pid();
-        
-        save_pid();
-        std::fill_n(begin(pid_pack), 8, 0);
-        _c.imu_is_used = 0;
-        pid_busy = false;
-        zos::status("receive pid parameters \n");
-
-    }
-    else{
-        zos::status("cannot receive pid parameters \n");
-    }
-}
-
-void robotz::set_pid_time1(){
-        pid_busy = true;
-        gpio_devices.set_motors_pid(pid_pack);
-        pid_real = gpio_devices.get_motors_pid();
-        for(int i=0;i<8;i++){
-            zos::status("pid{}: {:#04x}\n",i, pid_real[i]);
-        }
-        save_pid();
-        std::fill_n(begin(pid_pack), 8, 0);
-        pid_busy = false;
+double robotz::get_vr(const double _dt){
     
+    if(!robot_cmd.use_dir) return robot_cmd.vr_target;
+    float current_angle= gpio_devices.imu_status.theta_z*2*3.1415926/360;
+    float target_angle= robot_cmd.vr_target;
+    error = get_angle(target_angle - current_angle);
+    float derivative = (error - prev_error) /_dt;
+    prev_error = error ;
+    double output_vr = robot_cmd.angle_pid[0] * error + robot_cmd.angle_pid[2] * derivative;
+    zos::status("output_vr: {} error: {} target_theta: {} current angle: {}\n",output_vr,error,target_angle,current_angle);
+    zos::status("angle_p:{} ,angle_d:{}",robot_cmd.angle_pid[0],robot_cmd.angle_pid[2]);
+    return output_vr;
+
+}
+double robotz::get_angle(float angle){
+    if(angle<-3.1415926) return 2*3.1415926+angle;
+    else if(angle>3.1415926) return angle-2*3.1415926;
+    else return angle;
 }

@@ -415,7 +415,7 @@ int devicez::read_imu(mraa::Uart* uart) {
                 imu_status.T_degree = (short)(((short)data[index + 9] << 8) | data[index + 8]) / 32768.0 * 96.38 + 36.53;
                 // ESP_LOGE("imu", "imu acc_x_raw: %d, %d, %d, %d", data[index+0], data[index + 1], data[index + 2], data[index + 3]);
                 // ESP_LOGI("imu", "imu acc: %f, %f, %f, %f", imu_status.acc_x, imu_status.acc_y, imu_status.acc_z, imu_status.T_degree);
-                imu_failures++;
+                imu_failures=0;
                 
             }
         } else {
@@ -436,7 +436,7 @@ int devicez::read_imu(mraa::Uart* uart) {
                 imu_status.omega_y = (short)(((short)data[index + 5] << 8) | data[index + 4]) / 32768.0 * 2000;
                 imu_status.omega_z = (short)(((short)data[index + 7] << 8) | data[index + 6]) / 32768.0 * 2000;
                 imu_status.voltage = (short)(((short)data[index + 9] << 8) | data[index + 8]) / 100.0;
-                imu_failures++;
+                imu_failures=0;
             }
         } else {
            std::cout<<"imu acc not found"<<std::endl;
@@ -456,7 +456,7 @@ int devicez::read_imu(mraa::Uart* uart) {
                 imu_status.theta_y = (short)(((short)data[index + 5] << 8) | data[index + 4]) / 32768.0 * 180;
                 imu_status.theta_z = (short)(((short)data[index + 7] << 8) | data[index + 6]) / 32768.0 * 180;
                 imu_status.version = (short)(((short)data[index + 9] << 8) | data[index + 8]);
-                imu_failures++;
+                imu_failures=0;
             }
         } else {
             std::cout<<"imu acc not found"<<std::endl;
@@ -468,9 +468,16 @@ int devicez::read_imu(mraa::Uart* uart) {
 //   zos::status("=-------------------imudata:{:#04x}\n",element);
 //});
     zos::status("=-------------------imu_failures:{}\n",imu_failures);
-    if(imu_failures>5000){
+    if(imu_failures>500){
         reset=true;
          zos::warning("uart is crashed !");
+          std::ofstream flag_file("restart_flag.txt");
+        if (flag_file.is_open()) {
+                zos::warning("uart is crashed ,Created restart flag file!");
+                flag_file.close();
+            } else {
+                zos::warning("uart is crashed ,failed to creat flag file!");
+            }
         // std::ofstream flag_file("restart_flag.txt");
         // if (flag_file.is_open()) {
         //         zos::warning("uart is crashed ,Created restart flag file!");

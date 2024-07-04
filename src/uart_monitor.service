@@ -1,0 +1,9 @@
+[Unit]
+Description=Monitor uart Service
+
+[Service]
+Type=simple
+ExecStart=/home/pi/rpi-embedded/src/monitor.sh
+ 
+[Install]
+WantedBy=multi-user.target

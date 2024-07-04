@@ -1,4 +1,5 @@
-restart_flag="restart_flag.txt"
+#!/bin/bash
+restart_flag="/home/pi/rpi-embedded/src/restart_flag.txt"
 robot_service_name="zjunlict_wifi.service"
 
 while true; do
@@ -11,5 +12,6 @@ while true; do
         sudo systemctl start $robot_service_name
         echo "done restart"
     fi
-    sleep 5  # 每5秒检查一次
+        echo "uart is safe"
+    sleep 50  # 每5秒检查一次
 done
