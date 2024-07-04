@@ -220,7 +220,7 @@ void robotz::_cmd_cb(const zos::Data& data){
                 _c.vx_target = _p.cmd_vel().velocity_x();
                 _c.vy_target = _p.cmd_vel().velocity_y();
                 _c.use_dir = _p.cmd_vel().use_imu();
-                _c.vr_target = _c.use_dir ? _p.cmd_vel().imu_theta() : _p.cmd_vel().velocity_r();
+                _c.vr_target = _p.cmd_vel().velocity_r();
                 break;
             }
             default:{
