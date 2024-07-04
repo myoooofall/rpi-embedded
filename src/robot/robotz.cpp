@@ -228,7 +228,9 @@ void robotz::_cmd_cb(const zos::Data& data){
                 break;
             }
         }
-        
+        _c.angle_pid[0]=_p.angle_pid(0);
+        _c.angle_pid[1]=_p.angle_pid(1);
+        _c.angle_pid[2]=_p.angle_pid(2);
     }
     }
 }
